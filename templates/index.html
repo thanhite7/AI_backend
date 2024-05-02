@@ -1,0 +1,41 @@
+{% load static %} 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload Form</title>
+</head>
+<body>
+    <h2>Upload Image</h2>
+    <form method="post" enctype="multipart/form-data" action=""> <!-- Action attribute specifies the URL to submit the form data to -->
+        {% csrf_token %} <!-- Include CSRF token for security -->
+        <input type="file" name="image"> <!-- Input field for selecting the image file -->
+        <button type="submit">Upload</button> <!-- Submit button to upload the image -->
+    </form>
+
+    <p>{{prediction1}} </p>
+    <p>{{accuracy1}} </p>
+    <div style="display:flex; flex-direction:row ; gap:5px;">
+        {% for li in list1 %}
+            <img src="{% static 'image/' %}{{ li }}" style="width:100px; height:100px;">    
+        {% endfor %}
+    </div>
+    <p>{{prediction2}} </p>
+    <p>{{accuracy2}} </p>
+    <div style="display:flex; flex-direction:row ; gap:5px;">
+        {% for li in list2 %}
+            <img src="{% static 'image/' %}{{ li }}" style="width:100px; height:100px;">    
+        {% endfor %}
+    </div>
+    <p>{{prediction3}} </p>
+    <p>{{accuracy3}} </p>
+    <div style="display:flex; flex-direction:row ; gap:5px;">
+        {% for li in list3 %}
+            <img src="{% static 'image/' %}{{ li }}" style="width:100px; height:100px;">    
+        {% endfor %}
+    </div>
+
+    
+</body>
+</html>
