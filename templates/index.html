@@ -8,10 +8,10 @@
 </head>
 <body>
     <h2>Upload Image</h2>
-    <form method="post" enctype="multipart/form-data" action=""> <!-- Action attribute specifies the URL to submit the form data to -->
-        {% csrf_token %} <!-- Include CSRF token for security -->
-        <input type="file" name="image"> <!-- Input field for selecting the image file -->
-        <button type="submit">Upload</button> <!-- Submit button to upload the image -->
+    <form method="post" enctype="multipart/form-data" action="">
+        {% csrf_token %} 
+        <input type="file" name="image"> 
+        <button type="submit">Upload</button> 
     </form>
 
     <p>{{prediction1}} </p>
