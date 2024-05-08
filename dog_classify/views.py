@@ -27,7 +27,8 @@ def predict(request):
             lb2 = engine.classes[predglabel[1]]
             lb3 = engine.classes[predglabel[2]]
 
-            return render(request, 'index.html', {  'prediction1': lb1,
+            return render(request, 'index.html',{  'pred_img': image_file,
+                                                    'prediction1': lb1,
                                                     'accuracy1':round(predgaccuracy[0]* 100,3) ,
                                                     'prediction2': lb2,
                                                     'accuracy2':round(predgaccuracy[1]* 100,3) ,
