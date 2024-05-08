@@ -11,11 +11,14 @@ import random
 def predict(request):
     if request.method == 'POST':
         image_file = request.FILES.get('image')
-
+        
         if image_file:
             image_file.seek(0)
             image_file = BytesIO(image_file.read())
             image_file = Image.open(image_file)
+
+            image_file.save('static/image/preview.jpg')
+            
             image_file = image_file.resize((331,331))
             img_g = np.expand_dims(image_file, axis=0)
             test_features = engine.extract_features(img_g)
@@ -27,7 +30,7 @@ def predict(request):
             lb2 = engine.classes[predglabel[1]]
             lb3 = engine.classes[predglabel[2]]
 
-            return render(request, 'index.html',{  'pred_img': image_file,
+            return render(request, 'index.html',{   'prev_image': 'preview.jpg',
                                                     'prediction1': lb1,
                                                     'accuracy1':round(predgaccuracy[0]* 100,3) ,
                                                     'prediction2': lb2,
