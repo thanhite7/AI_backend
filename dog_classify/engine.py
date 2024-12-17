@@ -1,73 +1,59 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
-import os
-import gc
-
-from sklearn.model_selection import train_test_split
-
-import tensorflow as tf
-from tqdm import tqdm
-
-import numpy as np
-import pandas as pd
-from keras.models import load_model,Model
-from keras import Sequential
-from keras.callbacks import EarlyStopping
-
-from keras.optimizers import Adam, SGD
-from keras.callbacks import ReduceLROnPlateau
-from keras.layers import Flatten, Dense, BatchNormalization, Activation, Dropout
-from keras.layers import Lambda, Input, GlobalAveragePooling2D, BatchNormalization
-from keras.utils import to_categorical
-from tensorflow.keras.models import Model
-from keras.preprocessing.image import load_img
+import torch
+import argparse
+import torch.nn as nn
+from sqlalchemy.dialects.postgresql import array
 
 
-labels = pd.read_csv('labels.csv')
-classes = sorted(list(set(labels['breed'])))
-model = load_model('model.h5')
-img_size = (331,331,3)
+# Define the model architecture
+class RegressionModel(nn.Module):
+    def __init__(self):
+        super(RegressionModel, self).__init__()
+        # Lớp đầu vào và lớp ẩn thứ nhất
+        self.fc1 = nn.Linear(16, 128)  # Dense(128)
+        self.dropout1 = nn.Dropout(0.3)  # Dropout(0.3)
+        self.bn1 = nn.BatchNorm1d(128)  # Batch Normalization
 
-def get_features(model_name, model_preprocessor, input_size, data):
+        # Lớp ẩn thứ hai
+        self.fc2 = nn.Linear(128, 64)  # Dense(64)
+        self.dropout2 = nn.Dropout(0.3)  # Dropout(0.3)
+        self.bn2 = nn.BatchNorm1d(64)  # Batch Normalization
 
-    input_layer = Input(input_size)
-    preprocessor = Lambda(model_preprocessor)(input_layer)
-    base_model = model_name(weights='imagenet', include_top=False,
-                            input_shape=input_size)(preprocessor)
-    avg = GlobalAveragePooling2D()(base_model)
-    feature_extractor = Model(inputs = input_layer, outputs = avg)
-    
-    feature_maps = feature_extractor.predict(data, verbose=1)
-    return feature_maps
+        # Lớp ẩn thứ ba
+        self.fc3 = nn.Linear(64, 32)  # Dense(32)
+        self.bn3 = nn.BatchNorm1d(32)  # Batch Normalization
+
+        # Lớp đầu ra (linear)
+        self.output = nn.Linear(32, 1)  # Dense(1)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        # Forward pass qua các lớp
+        x = self.relu(self.bn1(self.fc1(x)))  # Lớp ẩn thứ nhất với ReLU và Batch Norm
+        x = self.dropout1(x)  # Dropout
+        x = self.relu(self.bn2(self.fc2(x)))  # Lớp ẩn thứ hai với ReLU và Batch Norm
+        x = self.dropout2(x)  # Dropout
+        x = self.relu(self.bn3(self.fc3(x)))  # Lớp ẩn thứ ba với ReLU và Batch Norm
+        x = self.output(x)  # Lớp đầu ra (linear, không activation)
+        return x
 
 
-from keras.applications.inception_v3 import InceptionV3, preprocess_input
-inception_preprocessor = preprocess_input
-from keras.applications.xception import Xception, preprocess_input
-xception_preprocessor = preprocess_input
-from keras.applications.inception_resnet_v2 import InceptionResNetV2, preprocess_input
-inc_resnet_preprocessor = preprocess_input
-from keras.applications.nasnet import NASNetLarge, preprocess_input
-nasnet_preprocessor = preprocess_input
+def predict(t2mdew, t2m, ps, tqv, tql, h1000, disph, frcan, hlml, rhoa, cig, ws, cldcr, v_2m, v_50m, v_850):
+    checkpoint = torch.load('best_model.pth')
+    model = RegressionModel()  # Thay MyModel bằng kiến trúc model bạn sử dụng
+    model.load_state_dict(checkpoint['model_state_dict'])
+    model.eval()
 
-def extract_features(data):
-    inception_features = get_features(InceptionV3, inception_preprocessor, img_size, data)
-    xception_features = get_features(Xception, xception_preprocessor, img_size, data)
-    nasnet_features = get_features(NASNetLarge, nasnet_preprocessor, img_size, data)
-    inc_resnet_features = get_features(InceptionResNetV2, inc_resnet_preprocessor, img_size, data)
+    x_train_min = checkpoint['x_train_min']  # Lấy giá trị x_train_min
+    x_train_max = checkpoint['x_train_max']  # Lấy giá trị x_train_max
 
-    final_features = np.concatenate([inception_features,
-                                     xception_features,
-                                     nasnet_features,
-                                     inc_resnet_features],axis=-1)
-    
-    
-    del inception_features
-    del xception_features
-    del nasnet_features
-    del inc_resnet_features
-    gc.collect()
-    
-    
-    return final_features
+    x_user_tensor = torch.tensor([t2mdew, t2m, ps, tqv, tql, h1000, disph, frcan, hlml, rhoa, cig, ws, cldcr, v_2m, v_50m, v_850], dtype=torch.float32)
 
+    # Normalize dữ liệu người dùng
+    x_user_normalized = (x_user_tensor - x_train_min.squeeze()) / (x_train_max.squeeze() - x_train_min.squeeze())
+
+    # Tạo dự đoán
+    with torch.no_grad():
+        prediction = model(x_user_normalized.unsqueeze(0))  # Thêm batch dimension
+
+    # In kết quả dự đoán
+    return prediction.item()
